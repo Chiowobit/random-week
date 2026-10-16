@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<!--
+  Esta línea indica que el documento es HTML5.
+  HTML5 es el estándar actual y permite usar etiquetas semánticas más claras.
+-->
+<html lang="es">
+  <!--
+    La etiqueta html engloba todo el documento.
+    lang="es" indica que el contenido está en español.
+  -->
+  <head>
+    <!--
+      head contiene metadatos y enlaces externos.
+      Aquí no se ve contenido visible, pero se configuran cosas importantes del navegador.
+    -->
+    <meta charset="UTF-8" />
+    <!--
+      charset UTF-8 permite mostrar tildes y caracteres especiales sin problemas.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      viewport hace que el contenido se adapte al ancho del móvil.
+      initial-scale=1.0 evita que la página salga ampliada al cargar.
+    -->
+    <title>Random Week</title>
+    <!--
+      title define el texto que aparece en la pestaña del navegador.
+    -->
+    <link rel="stylesheet" href="style.css" />
+    <!--
+      link conecta esta página con la hoja de estilos CSS.
+      Sin este archivo, la app no tendría colores, tipografías ni diseño.
+    -->
+  </head>
+  <body>
+    <!--
+      body es todo el contenido visible que ve el usuario.
+      Aquí va la interfaz completa de la aplicación.
+    -->
+    <div class="app-shell">
+      <!--
+        app-shell es un contenedor general para centrar la app y darle ancho máximo.
+      -->
+      <header class="topbar">
+        <!--
+          header es la cabecera principal de la aplicación.
+          Normalmente aquí va el nombre de la app y la identidad visual.
+        -->
+        <div>
+          <!--
+            Aquí se agrupan el texto de la cabecera para ordenarlo visualmente.
+          -->
+          <p class="eyebrow">Planificador semanal</p>
+          <!--
+            p crea un párrafo corto con la descripción de la app.
+            eyebrow es una clase CSS para darle estilo visual pequeño y elegante.
+          -->
+          <h1>Random Week</h1>
+          <!--
+            h1 es el título principal de la página.
+            Es el nombre visible del proyecto.
+          -->
+        </div>
+      </header>
+
+      <!--
+        Esta barra reúne accesos rápidos como herramientas de papelería alrededor
+        del tablero. Los enlaces llevan a secciones ya existentes de la aplicación.
+      -->
+      <nav class="board-toolbar" aria-label="Herramientas del planificador">
+        <!-- Este acceso desplaza la página al formulario para planificar nuevas tareas. -->
+        <a class="toolbar-button" href="#task-form">Planificar nuevas tareas</a>
+        <a class="toolbar-button" href="#task-list">Biblioteca de tareas</a>
+        <a class="toolbar-button" href="#deadline-title">Próximas fechas límite</a>
+        <a class="toolbar-button" href="#week-config-title">Mi horario</a>
+        <a class="toolbar-button" href="#theme-settings">Personalizar tema</a>
+        <p class="weekly-progress" id="weekly-progress" aria-live="polite"></p>
+      </nav>
+
+      <section class="cork-section" aria-labelledby="cork-title">
+        <div class="cork-heading">
+          <div>
+            <p class="eyebrow">Tu semana a la vista</p>
+            <h2 id="cork-title">El tablero semanal</h2>
+          </div>
+          <div class="schedule-view-controls" role="group" aria-label="Vista semanal">
+            <button type="button" id="cork-view-button" class="secondary-btn" aria-pressed="true">Vista corcho</button>
+            <button type="button" id="schedule-view-button" class="secondary-btn" aria-pressed="false">Vista de horario</button>
+            <button type="button" id="generate-schedule-button" class="primary-btn">Generar horario</button>
+          </div>
+        </div>
+        <div id="cork-view">
+          <div class="cork-board" id="cork-board" aria-live="polite"></div>
+        </div>
+        <div id="schedule-view" class="hidden">
+          <div class="schedule-scroll">
+            <div id="weekly-schedule" aria-live="polite"></div>
+          </div>
+          <div id="schedule-messages" class="schedule-messages" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Cada selector controla una capa visual independiente del resto. -->
+      <section class="theme-settings panel" id="theme-settings" aria-labelledby="theme-settings-title">
+        <div class="panel-header theme-settings__heading">
+          <div>
+            <p class="eyebrow">Hazlo tuyo</p>
+            <h2 id="theme-settings-title">Personaliza tu tablero</h2>
+          </div>
+          <button type="button" class="secondary-btn" id="reset-theme-button">Restaurar tema inicial</button>
+        </div>
+        <p class="settings-help">Combina cada capa por separado. Los cambios solo afectan a la apariencia y se guardan en este navegador.</p>
+
+        <div class="theme-controls">
+          <label for="theme-background">
+            Fondo
+            <select id="theme-background"></select>
+            <span class="theme-layer-sample" data-theme-sample="background" aria-hidden="true"></span>
+          </label>
+          <label for="theme-sticky-notes">
+            Estilo de post-its
+            <select id="theme-sticky-notes"></select>
+            <span class="theme-layer-sample" data-theme-sample="stickyNotes" aria-hidden="true"></span>
+          </label>
+          <label for="theme-decorations">
+            Decoraciones
+            <select id="theme-decorations"></select>
+            <span class="theme-layer-sample" data-theme-sample="decorations" aria-hidden="true"></span>
+          </label>
+          <label for="theme-interface">
+            Paleta de la interfaz
+            <select id="theme-interface"></select>
+            <span class="theme-layer-sample" data-theme-sample="interface" aria-hidden="true"></span>
+          </label>
+        </div>
+
+        <div class="theme-preview" aria-labelledby="theme-preview-title">
+          <h3 id="theme-preview-title">Vista previa de la combinación</h3>
+          <div class="theme-preview__board" id="theme-preview-board" aria-live="polite"></div>
+        </div>
+        <p class="settings-help" id="theme-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <main class="layout">
+        <!--
+          main indica que esta es la parte principal de la página.
+          layout es una clase CSS que organiza los bloques en columnas o filas.
+        -->
+        <section class="panel" aria-labelledby="task-form-title">
+          <!--
+            section divide la interfaz en bloques temáticos.
+            panel le da estilo visual al bloque.
+            aria-labelledby conecta este bloque con su título para accesibilidad.
+          -->
+          <div class="panel-header">
+            <!--
+              panel-header ayuda a darle un encabezado visual al bloque.
+            -->
+            <h2 id="task-form-title">Planificar nuevas tareas</h2>
+            <!--
+              h2 es un subtítulo del contenido.
+              id="task-form-title" permite que el section se relacione con este título.
+            -->
+          </div>
+
+          <form id="task-form" class="task-form">
+            <!--
+              form recoge los datos introducidos por el usuario.
+              id="task-form" facilita su uso desde JavaScript.
+            -->
+            <input type="hidden" id="task-id" name="taskId" />
+            <!--
+              input hidden guarda el id de la tarea cuando se está editando.
+              Es invisible para el usuario, pero sirve para identificar la tarea en JS.
+            -->
+
+            <label>
+              <!--
+                label describe qué campo va a rellenar el usuario.
+              -->
+              Nombre de la tarea
+              <input type="text" id="task-title" name="title" maxlength="80" required />
+              <!--
+                input text sirve para escribir el nombre de la tarea.
+                maxlength limita la longitud del texto.
+                required obliga a completarlo antes de enviar el formulario.
+              -->
+            </label>
+
+            <div class="two-columns">
+              <!--
+                Este contenedor coloca dos campos en la misma fila.
+                Aquí se muestran categoría y prioridad en una distribución más compacta.
+              -->
+              <label>
+                Categoría
+                <select id="task-category" name="category">
+                  <!--
+                    select crea un menú desplegable con opciones.
+                    La categoría ayuda a clasificar la tarea por tipo.
+                  -->
+                  <option value="hogar">Hogar</option>
+                  <!--
+                    Tareas domésticas.
+                  -->
+                  <option value="estudios">Estudios</option>
+                  <!--
+                    Estudio, aprendizaje y formación.
+                  -->
+                  <option value="trabajo">Trabajo</option>
+                  <!--
+                    Tareas relacionadas con el trabajo o proyectos profesionales.
+                  -->
+                  <option value="recados">Recados</option>
+                  <!--
+                    Gestiones y tareas fuera de casa.
+                  -->
+                  <option value="ocio">Ocio</option>
+                  <!--
+                    Tiempo libre, hobbies o descanso activo.
+                  -->
+                  <option value="autocuidado">Autocuidado</option>
+                  <!--
+                    Salud, descanso, ejercicio, bienestar personal.
+                  -->
+                  <option value="otro">Otro</option>
+                  <!--
+                    Cualquier otra categoría que no encaje en las anteriores.
+                  -->
+                </select>
+              </label>
+
+              <label>
+                Prioridad
+                <select id="task-priority" name="priority">
+                  <!--
+                    Prioridad define la urgencia o importancia de la tarea.
+                    Esto ayuda a organizar mejor la semana.
+                  -->
+                  <option value="baja">Baja</option>
+                  <!--
+                    Tareas menos urgentes.
+                  -->
+                  <option value="media" selected>Media</option>
+                  <!--
+                    Es la prioridad por defecto.
+                  -->
+                  <option value="alta">Alta</option>
+                  <!--
+                    Tareas importantes que deberían aparecer antes.
+                  -->
+                  <option value="urgente">Urgente</option>
+                  <!--
+                    Tareas más críticas o con más presión temporal.
+                  -->
+                </select>
+              </label>
+            </div>
+
+            <div class="three-columns">
+              <!--
+                Aquí se definen tres atributos clave de cada tarea:
+                duración, dificultad y frecuencia.
+              -->
+              <label>
+                Duración (min)
+                <input type="number" id="task-duration" name="duration" min="15" max="480" step="15" value="60" />
+                <!--
+                  Este campo guarda el tiempo estimado que tarda la tarea.
+                  Se usa para hacer una planificación realista y equilibrada.
+                -->
+              </label>
+
+              <label>
+                Dificultad
+                <select id="task-difficulty" name="difficulty">
+                  <!--
+                    El nivel de esfuerzo indica cuánto trabajo mental o físico exige la tarea.
+                  -->
+                  <option value="1">1</option>
+                  <option value="2" selected>2</option>
+                  <option value="3">3</option>
+                </select>
+              </label>
+
+              <label>
+                Frecuencia
+                <select id="task-frequency" name="frequency">
+                  <!--
+                    Frecuencia define si la tarea es puntual o si debe repetirse.
+                  -->
+                  <option value="una_vez">Una vez</option>
+                  <option value="semanal">Semanal</option>
+                  <option value="recurrente">Recurrente</option>
+                </select>
+              </label>
+            </div>
+
+            <fieldset>
+              <!--
+                fieldset agrupa los días preferidos de la tarea.
+                Hace que el conjunto sea más claro para el usuario.
+              -->
+              <legend>Días preferidos</legend>
+              <!--
+                legend explica al usuario qué significa el grupo de casillas.
+              -->
+              <div class="checkbox-grid" id="preferred-days-group">
+                <!--
+                  checkbox-grid organiza todos los días en una fila compacta.
+                  Cada casilla representa un día de la semana disponible para esa tarea.
+                -->
+                <label><input type="checkbox" name="preferredDays" value="lunes" /> L</label>
+                <!--
+                  El usuario puede elegir lunes como día preferido.
+                -->
+                <label><input type="checkbox" name="preferredDays" value="martes" /> M</label>
+                <label><input type="checkbox" name="preferredDays" value="miercoles" /> X</label>
+                <label><input type="checkbox" name="preferredDays" value="jueves" /> J</label>
+                <label><input type="checkbox" name="preferredDays" value="viernes" /> V</label>
+                <label><input type="checkbox" name="preferredDays" value="sabado" /> S</label>
+                <label><input type="checkbox" name="preferredDays" value="domingo" /> D</label>
+              </div>
+            </fieldset>
+
+            <div class="three-columns">
+              <!--
+                La disponibilidad inicial, la fecha programada y el límite son datos distintos.
+              -->
+              <label>
+                Disponible desde
+                <input type="date" id="task-start-date" name="startDate" />
+                <!--
+                  Fecha desde la que la tarea es válida para comenzar.
+                -->
+              </label>
+
+              <label>
+                Fecha programada
+                <input type="date" id="task-scheduled-date" name="scheduledDate" />
+                <!-- La fecha en la que se prevé realizar la tarea. -->
+              </label>
+
+              <label>
+                Fecha límite
+                <input type="date" id="task-due-date" name="dueDate" />
+                <!--
+                  Fecha máxima recomendada para terminar la tarea.
+                -->
+              </label>
+            </div>
+
+            <div class="two-columns task-time-fields">
+              <label>Hora de inicio
+                <input type="time" id="task-start-time" name="startTime" />
+              </label>
+              <label>Tipo de horario
+                <select id="task-schedule-type" name="scheduleType">
+                  <option value="flexible">Flexible</option>
+                  <option value="fixed">Fijo (no mover)</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-columns">
+              <label>Preferencia horaria
+                <select id="task-preferred-time" name="preferredTime">
+                  <option value="cualquiera">Cualquier hora</option>
+                  <option value="manana">Mañana</option>
+                  <option value="tarde">Tarde</option>
+                  <option value="noche">Noche</option>
+                </select>
+              </label>
+              <label>Hora preferida (opcional)
+                <input type="time" id="task-preferred-start-time" name="preferredStartTime" />
+              </label>
+            </div>
+            <p class="settings-help">La hora final se calcula a partir de la duración. Si escribes una hora manualmente, se conserva hasta que confirmes un cambio.</p>
+
+            <label class="toggle-row">
+              <!--
+                Este checkbox activa la posibilidad de asignar una fecha exacta a la tarea.
+              -->
+              <input type="checkbox" id="task-fixed-day-enabled" name="fixedDayEnabled" />
+              Tiene día fijo
+            </label>
+
+            <div id="fixed-day-container" class="hidden">
+              <!--
+                Este bloque permanece oculto y aparece solo si se activa el checkbox anterior.
+              -->
+              <label>
+                Día fijo
+                <input type="date" id="task-fixed-day" name="fixedDay" />
+                <!--
+                  Aquí se indica la fecha exacta del compromiso fijo.
+                -->
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <!--
+                Acciones del formulario: enviar o limpiar.
+              -->
+              <button type="submit" class="primary-btn">Guardar tarea</button>
+              <!--
+                submit envia los datos del formulario al JavaScript para crear o actualizar la tarea.
+              -->
+              <button type="button" id="reset-form-btn" class="secondary-btn">Limpiar</button>
+              <!--
+                button type="button" no envía el formulario; sirve para borrar los campos.
+              -->
+            </div>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="task-list-title">
+          <!--
+            Esta sección mostrará todas las tareas creadas.
+            El contenido se genera dinámicamente con JavaScript.
+          -->
+          <div class="panel-header">
+            <h2 id="task-list-title">Tareas</h2>
+          </div>
+          <div id="task-list" class="task-list" aria-live="polite"></div>
+          <!--
+            task-list es el contenedor donde se pintan cada una de las tareas.
+            aria-live="polite" ayuda a lectores de pantalla a anunciar cambios.
+          -->
+        </section>
+
+        <section class="panel full-width" aria-labelledby="completion-settings-title">
+          <div class="panel-header">
+            <h2 id="completion-settings-title">Modo de finalización de tareas</h2>
+          </div>
+          <div id="completion-settings" class="completion-settings">
+            <label>
+              Modo
+              <select id="completion-mode" data-completion-setting="mode">
+                <option value="manual">Manual</option>
+                <option value="automatico">Automático</option>
+                <option value="preguntar">Preguntar</option>
+              </select>
+            </label>
+            <p class="settings-help">Manual es el modo predeterminado. Actualmente no hay reglas automáticas configuradas; las fechas y el temporizador solo piden confirmación en modo Preguntar.</p>
+            <fieldset>
+              <legend>Eventos que piden confirmación en modo Preguntar</legend>
+              <div class="completion-events">
+                <label class="toggle-row">
+                  <input id="ask-on-scheduled-date" type="checkbox" data-completion-setting="askOnScheduledDate" />
+                  Al llegar la fecha programada
+                </label>
+                <label class="toggle-row">
+                  <input id="ask-on-deadline" type="checkbox" data-completion-setting="askOnDeadline" />
+                  Al llegar o pasar la fecha límite
+                </label>
+                <label class="toggle-row">
+                  <input id="ask-on-timer-finish" type="checkbox" data-completion-setting="askOnTimerFinish" />
+                  Al finalizar un temporizador
+                </label>
+              </div>
+            </fieldset>
+          </div>
+        </section>
+
+        <section class="panel full-width" aria-labelledby="week-config-title">
+          <!--
+            Aquí se configura la disponibilidad y energía de cada día de la semana.
+            full-width hace que ocupe todo el ancho disponible.
+          -->
+          <div class="panel-header">
+            <h2 id="week-config-title">Mi horario</h2>
+          </div>
+          <p class="settings-help">Cada día tiene horas independientes. Escribe cada periodo no disponible como <code>HH:MM-HH:MM Motivo</code>, uno por línea. Los cambios se guardan automáticamente.</p>
+          <div class="availability-copy">
+            <label>Copiar configuración desde
+              <select id="copy-availability-source"></select>
+            </label>
+            <fieldset>
+              <legend>Copiar a estos días</legend>
+              <div class="checkbox-grid availability-copy-days">
+                <label><input type="checkbox" data-copy-day="lunes" /> L</label>
+                <label><input type="checkbox" data-copy-day="martes" /> M</label>
+                <label><input type="checkbox" data-copy-day="miercoles" /> X</label>
+                <label><input type="checkbox" data-copy-day="jueves" /> J</label>
+                <label><input type="checkbox" data-copy-day="viernes" /> V</label>
+                <label><input type="checkbox" data-copy-day="sabado" /> S</label>
+                <label><input type="checkbox" data-copy-day="domingo" /> D</label>
+              </div>
+            </fieldset>
+            <button type="button" id="copy-availability-button" class="secondary-btn">Copiar horario</button>
+          </div>
+          <div id="week-config" class="week-config"></div>
+          <!--
+            week-config se rellenará con tarjetas para cada día usando JavaScript.
+          -->
+        </section>
+
+        <section class="panel" aria-labelledby="deadline-title">
+          <!--
+            Sección para mostrar las tareas urgentes con fecha límite cercana.
+          -->
+          <div class="panel-header">
+            <h2 id="deadline-title">Próximas fechas límite</h2>
+          </div>
+          <ul id="deadline-list" class="deadline-list"></ul>
+          <!--
+            Listado ordenado por fecha más próxima.
+          -->
+        </section>
+
+        <section class="panel" aria-labelledby="timer-title">
+          <!--
+            Bloque del temporizador.
+            Aquí el usuario puede controlar el tiempo de trabajo para una tarea concreta.
+          -->
+          <div class="panel-header">
+            <h2 id="timer-title">Temporizador</h2>
+          </div>
+
+          <div class="timer-controls">
+            <!--
+              Contenedor para seleccionar tarea, modo y duración del temporizador.
+            -->
+            <label>
+              Tarea activa
+              <select id="timer-task-select"></select>
+              <!--
+                El select se rellena con tareas disponibles para trabajar con el temporizador.
+              -->
+            </label>
+
+            <label>
+              Modo
+              <select id="timer-mode">
+                <!--
+                  El modo cambia la lógica de trabajo del temporizador.
+                -->
+                <option value="pomodoro">Pomodoro</option>
+                <!--
+                  Alterna trabajo y descanso.
+                -->
+                <option value="continuo">Continuo</option>
+                <!--
+                  No hay pausas automáticas entre ciclos.
+                -->
+                <option value="objetivo">Objetivo</option>
+                <!--
+                  El usuario fija un objetivo de trabajo para una tarea.
+                -->
+              </select>
+            </label>
+
+            <label>
+              Duración (min)
+              <input type="number" id="timer-duration" min="1" max="240" value="25" />
+              <!--
+                Duración del periodo de trabajo. Se cambia según el modo elegido.
+              -->
+            </label>
+          </div>
+
+          <div class="timer-display" id="timer-display">00:00</div>
+          <!--
+            timer-display muestra el tiempo restante en pantalla.
+            JavaScript lo actualiza según el temporizador.
+          -->
+          <div class="timer-status" id="timer-status">Sin iniciar</div>
+          <!--
+            timer-status informa del estado actual: en curso, pausado o finalizado.
+          -->
+
+          <div class="form-actions timer-actions">
+            <!--
+              Botones de control del temporizador.
+            -->
+            <button type="button" id="start-timer-btn" class="primary-btn">Iniciar</button>
+            <!--
+              Empieza la cuenta del tiempo.
+            -->
+            <button type="button" id="pause-timer-btn" class="secondary-btn">Pausar</button>
+            <!--
+              Detiene temporalmente la cuenta sin perder el tiempo acumulado.
+            -->
+            <button type="button" id="resume-timer-btn" class="secondary-btn">Reanudar</button>
+            <!--
+              Vuelve a continuar la cuenta desde el punto en el que se pausó.
+            -->
+            <button type="button" id="finish-timer-btn" class="secondary-btn">Finalizar</button>
+            <!--
+              Finaliza la sesión y registra el tiempo trabajado.
+            -->
+            <button type="button" id="cancel-timer-btn" class="danger-btn">Cancelar</button>
+            <!--
+              Cancela por completo el temporizador actual.
+            -->
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="schedule-note-dialog" class="schedule-note-dialog" aria-labelledby="schedule-note-title">
+      <article id="schedule-note-content" class="schedule-note post-it">
+        <button type="button" class="schedule-note__close" data-action="close-note" aria-label="Cerrar detalles">×</button>
+        <div id="schedule-note-details"></div>
+        <div id="schedule-note-actions" class="schedule-note__actions"></div>
+      </article>
+    </dialog>
+
+    <script src="script.js"></script>
+    <!--
+      script.js contiene la lógica de la aplicación: tareas, almacenamiento, semana y temporizador.
+      Se carga al final para que el navegador ya haya construido la interfaz.
+    -->
+  </body>
+</html>
